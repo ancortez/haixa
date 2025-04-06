@@ -1,0 +1,10 @@
+/* Fuerza la visualización del dropdown */
+#userDropdown + .dropdown-menu {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: absolute !important;
+    inset: auto auto 0px 0px !important;
+    margin: 0 !important;
+    transform: translate(0px, 40px) !important;
+}

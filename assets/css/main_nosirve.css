@@ -1,0 +1,190 @@
+/* Estilos generales */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.login-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #e9ecef;
+}
+
+.login-container {
+    display: flex;
+    width: 900px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.login-logo {
+    flex: 1;
+    background: #0d6efd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.login-logo img {
+    max-width: 100%;
+    height: auto;
+}
+
+.login-form {
+    flex: 1;
+    padding: 2rem;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+}
+
+.nav-link i {
+    margin-right: 5px;
+}
+
+/* Estilos para las pestañas */
+.nav-tabs .nav-link {
+    border: none;
+    color: #495057;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom: 3px solid #0d6efd;
+    background: transparent;
+}
+
+.tab-content {
+    background: white;
+}
+
+/* Estilos para tarjetas */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+}
+
+/* Estilos para tablas */
+.table {
+    font-size: 0.9rem;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Estilos para botones */
+.btn {
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Estilos para formularios */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    font-size: 0.875rem;
+}
+
+.form-control, .form-select {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+}
+
+/* Estilos para el título de domicilio */
+.text-warning {
+    color: #fd7e14 !important;
+}
+
+/* Estilos para los radios de selección */
+input[type="radio"] {
+    transform: scale(1.2);
+    margin-right: 5px;
+}
+
+/* Dropdown del usuario */
+.navbar .dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    display: none; /* Oculto por defecto */
+    min-width: 200px;
+}
+
+/* Mostrar cuando tiene clase 'show' */
+.navbar .dropdown-menu.show {
+    display: block;
+}
+
+/* Eliminar transformaciones conflictivas */
+.dropdown-menu {
+    transform: none !important;
+    margin-top: 0.125rem !important;
+}
+
+/* Flecha del dropdown */
+.dropdown-toggle::after {
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    content: "";
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+}
+
+/* CORRECCIONES PARA DROPDOWN */
+.navbar .dropdown-menu {
+    position: absolute;
+    display: block; /* Importante */
+    opacity: 0; /* Inicialmente transparente */
+    visibility: hidden; /* Inicialmente oculto */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000; /* Asegurar que está por encima */
+    pointer-events: none; /* Evitar interacciones cuando está oculto */
+}
+
+.navbar .dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Asegurar que el contenedor no oculte el dropdown */
+.navbar-collapse {
+    overflow: visible !important;
+}
+
+/* Corrección específica para el menú de clientes */
+#clientesDropdown + .dropdown-menu {
+    left: auto;
+    right: 0;
+}

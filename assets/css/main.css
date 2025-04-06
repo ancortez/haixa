@@ -1,0 +1,44 @@
+/* Dropdown base */
+.navbar .dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown menu - estado inicial */
+.navbar .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    padding: 0.5rem 0;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Indicador visual de toggle activo */
+.navbar .dropdown-toggle.active {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* Añade esto al final de tu archivo CSS */
+.dropdown-menu-end {
+    right: 0;
+    left: auto !important;
+}
+
+/* Para dispositivos móviles */
+@media (max-width: 991.98px) {
+    .dropdown-menu-end {
+        right: auto;
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+}
