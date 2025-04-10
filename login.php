@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (authenticateUser($username, $password)) {
         $_SESSION['user'] = $username;
         $_SESSION['last_activity'] = time();
-        header("Location: index.php");
+        header("Location: launch-dashboard.php");
         exit();
     } else {
         $error = "Usuario o contraseña incorrectos";
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>HAIXA - Login</title>
 
     <!-- Estilos locales -->
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/login.css">
     <!-- Bootstrap CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome CDN -->

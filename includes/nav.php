@@ -121,15 +121,15 @@ if (!isset($_SESSION)) {
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label for="nombre" class="form-label">Nombre(s)</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre">
+                                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Puede ser parcial" autocomplete="off">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="apellido_paterno" class="form-label">Apellido Paterno</label>
-                                    <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno">
+                                    <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno" placeholder="Puede ser parcial" autocomplete="off">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="apellido_materno" class="form-label">Apellido Materno</label>
-                                    <input type="text" class="form-control" id="apellido_materno" name="apellido_materno">
+                                    <input type="text" class="form-control" id="apellido_materno" name="apellido_materno" placeholder="Puede ser parcial" autocomplete="off">
                                 </div>
                             </div>
                         </form>
@@ -139,27 +139,27 @@ if (!isset($_SESSION)) {
                             <div class="row">
                                 <div class="col-md-8">
                                     <label for="rfc" class="form-label">RFC</label>
-                                    <input type="text" class="form-control" id="rfc" name="rfc" placeholder="Puede ser parcial">
+                                    <input type="text" class="form-control" id="rfc" name="rfc" placeholder="Puede ser parcial" autocomplete="off">
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
                 
-                <div id="resultadosBusqueda" class="mt-3 d-none">
+                <div id="resultadosBusqueda" class="mt-3">
                     <h6>Resultados de búsqueda:</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Seleccionar</th>
+                                    <th>Acción</th>
                                     <th>Nombre</th>
                                     <th>RFC</th>
                                     <th>Género</th>
                                 </tr>
                             </thead>
                             <tbody id="resultadosBody">
-                                <!-- Aquí se cargarán los resultados via AJAX -->
+                                <!-- Los resultados se cargarán aquí via AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -174,3 +174,153 @@ if (!isset($_SESSION)) {
         </div>
     </div>
 </div>
+
+<script>
+// Script para manejar la búsqueda de clientes
+document.addEventListener('DOMContentLoaded', function() {
+    const btnBuscarCliente = document.getElementById('btnBuscarCliente');
+    const resultadosBusqueda = document.getElementById('resultadosBusqueda');
+    const resultadosBody = document.getElementById('resultadosBody');
+    
+    // Mostrar resultados al hacer clic en Buscar
+    btnBuscarCliente.addEventListener('click', function() {
+        buscarClientes();
+    });
+    
+    // Permitir búsqueda al presionar Enter en los campos
+    document.getElementById('nombre').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') buscarClientes();
+    });
+    document.getElementById('apellido_paterno').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') buscarClientes();
+    });
+    document.getElementById('apellido_materno').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') buscarClientes();
+    });
+    document.getElementById('rfc').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') buscarClientes();
+    });
+    
+    function buscarClientes() {
+        const activeTab = document.querySelector('#buscarClienteTabs .nav-link.active');
+        let formData;
+        
+        if (activeTab.id === 'porNombre-tab') {
+            formData = {
+                tipo: 'nombre',
+                nombre: document.getElementById('nombre').value,
+                apellido_paterno: document.getElementById('apellido_paterno').value,
+                apellido_materno: document.getElementById('apellido_materno').value
+            };
+        } else {
+            formData = {
+                tipo: 'rfc',
+                rfc: document.getElementById('rfc').value
+            };
+        }
+        
+        // Limpiar resultados anteriores
+        resultadosBody.innerHTML = '<tr><td colspan="4" class="text-center">Buscando clientes...</td></tr>';
+        
+        // Realizar la petición AJAX
+        fetch('includes/buscar_clientes.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Limpiar resultados anteriores
+            resultadosBody.innerHTML = '';
+            
+            // Caso 1: Error del servidor
+            if (data.error) {
+                resultadosBody.innerHTML = `<tr><td colspan="4" class="text-danger">${data.error}</td></tr>`;
+                return;
+            }
+            
+            // Caso 2: No es un array
+            if (!Array.isArray(data)) {
+                resultadosBody.innerHTML = '<tr><td colspan="4">Formato de datos inválido</td></tr>';
+                return;
+            }
+            
+            // Caso 3: Array vacío
+            if (data.length === 0) {
+                resultadosBody.innerHTML = '<tr><td colspan="4">No se encontraron clientes</td></tr>';
+                return;
+            }
+            
+            // Caso 4: Éxito (array con datos)
+            data.forEach(cliente => {
+                resultadosBody.innerHTML += `
+                    <tr>
+                        <td>
+                            <a href="index.php?page=clientes/detalle&id=${cliente.id_cliente}" 
+                               class="btn btn-link p-0" 
+                               title="Seleccionar cliente">
+                                <i class="fas fa-user-circle text-primary" style="font-size: 1.5rem;"></i>
+                            </a>
+                        </td>
+                        <td>${cliente.nombres} ${cliente.apellido_paterno} ${cliente.apellido_materno}</td>
+                        <td>${cliente.rfc || 'N/A'}</td>
+                        <td>${cliente.nombre_genero || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            resultadosBody.innerHTML = `<tr><td colspan="4">Error de conexión: ${error.message}</td></tr>`;
+        });
+            
+    }
+    
+    function cargarDetalleCliente(clienteId) {
+        // Implementar la carga del detalle del cliente en el contenido principal
+        window.location.href = `index.php?page=clientes/detalle&id=${clienteId}`;
+    }
+});
+</script>
+
+<script>
+    fetch('/haixa/includes/buscar_clientes.php', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+})
+.then(response => response.text())  // Cambiado a text() para ver la respuesta cruda
+.then(text => {
+    console.log('Respuesta cruda:', text);
+    try {
+        const data = JSON.parse(text);
+        // Tu código para manejar los datos...
+    } catch (e) {
+        console.error('Error al parsear JSON:', e);
+    }
+})
+.catch(error => {
+    console.error('Error en la petición:', error);
+});
+</script>
+<script>
+    .then(data => {
+    if (data.error) {
+        console.error(data.error); // Muestra errores del servidor
+        resultadosBody.innerHTML = `<tr><td colspan="4">${data.error}</td></tr>`;
+        return;
+    }
+    
+    if (!Array.isArray(data)) { // Si no es un array
+        console.error("Respuesta inesperada:", data);
+        resultadosBody.innerHTML = '<tr><td colspan="4">Formato de respuesta incorrecto</td></tr>';
+        return;
+    }
+
+    // Si llega aquí, data es un array válido
+    data.forEach(cliente => {
+        // Tu código para mostrar resultados
+    });
+})
+</script>

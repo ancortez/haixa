@@ -1,136 +1,244 @@
+// Función para recargar contactos sin refrescar toda la página
+function cargarContactos() {
+    fetch(`includes/cargar_contactos.php?id_cliente=${clienteId}`)
+        .then(response => response.text())
+        .then(html => {
+            document.querySelector('#contacto .table-responsive').innerHTML = html;
+            // Reasignar eventos a los nuevos botones
+            asignarEventosContactos();
+        })
+        .catch(error => {
+            console.error('Error al cargar contactos:', error);
+            // Si falla, recargar toda la página
+            window.location.reload();
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Manejo de la pestaña de domicilios
-    const domicilioForm = document.getElementById('formDomicilio');
-    const btnModificarDomicilio = document.getElementById('btnModificarDomicilio');
-    const btnGuardarDomicilio = document.getElementById('btnGuardarDomicilio');
-    const btnCancelarDomicilio = document.getElementById('btnCancelarDomicilio');
-    const btnNuevoDomicilio = document.getElementById('btnNuevoDomicilio');
-    const domicilioTitulo = document.getElementById('domicilioTitulo');
-    
-    // Estados y municipios
-    const estadoSelect = document.getElementById('estado');
-    const municipioSelect = document.getElementById('municipio');
-    const codigoPostalInput = document.getElementById('codigo_postal');
-    const btnBuscarColonias = document.getElementById('btnBuscarColonias');
-    const coloniaSelect = document.getElementById('colonia');
-    const calleSelect = document.getElementById('calle');
-    
-    // Cargar estados al iniciar
-    fetchEstados();
-    
-    // Evento para modificar domicilio
-    btnModificarDomicilio.addEventListener('click', function() {
-        enableForm(domicilioForm);
-        btnModificarDomicilio.classList.add('d-none');
-        btnGuardarDomicilio.classList.remove('d-none');
-        btnCancelarDomicilio.classList.remove('d-none');
-    });
-    
-    // Evento para cancelar edición
-    btnCancelarDomicilio.addEventListener('click', function() {
-        disableForm(domicilioForm);
-        btnModificarDomicilio.classList.remove('d-none');
-        btnGuardarDomicilio.classList.add('d-none');
-        btnCancelarDomicilio.classList.add('d-none');
-        // Aquí podrías resetear el formulario si es necesario
-    });
-    
-    // Evento para nuevo domicilio
-    btnNuevoDomicilio.addEventListener('click', function() {
-        domicilioForm.reset();
-        domicilioTitulo.textContent = 'REGISTRO DE NUEVO DOMICILIO';
-        domicilioTitulo.classList.add('text-warning');
-        enableForm(domicilioForm);
-        btnModificarDomicilio.classList.add('d-none');
-        btnGuardarDomicilio.classList.remove('d-none');
-        btnCancelarDomicilio.classList.remove('d-none');
-    });
-    
-    // Evento cambio de estado
-    estadoSelect.addEventListener('change', function() {
-        const estadoId = this.value;
-        municipioSelect.disabled = true;
-        municipioSelect.innerHTML = '<option value="">Cargando...</option>';
-        
-        if (estadoId) {
-            fetch(`/api/municipios?estado=${estadoId}`)
-                .then(response => response.json())
-                .then(data => {
-                    municipioSelect.innerHTML = '<option value="">Seleccionar...</option>';
-                    data.forEach(municipio => {
-                        const option = document.createElement('option');
-                        option.value = municipio.id;
-                        option.textContent = municipio.nombre;
-                        municipioSelect.appendChild(option);
+    // Verificar que SweetAlert esté cargado
+    if (typeof Swal === 'undefined') {
+        console.error('SweetAlert2 no está cargado');
+        // Opcional: cargar SweetAlert2 dinámicamente
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+        document.head.appendChild(script);
+    }
+
+    // Formulario de identificación
+    const formIdentificacion = document.getElementById('formIdentificacion');
+    if (formIdentificacion) {
+        formIdentificacion.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Confirmar cambios?',
+                text: "Los datos de identificación son muy importantes. ¿Está seguro de modificarlos?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, guardar cambios',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(formIdentificacion);
+                    
+                    fetch('includes/actualizar_cliente.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Error en la respuesta');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Guardado!', 'Datos actualizados correctamente', 'success');
+                        } else {
+                            throw new Error(data.error || 'Error desconocido');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', error.message, 'error');
+                        console.error('Error:', error);
                     });
-                    municipioSelect.disabled = false;
-                });
-        } else {
-            municipioSelect.innerHTML = '<option value="">Seleccionar estado primero</option>';
-        }
-    });
-    
-    // Evento para buscar colonias por CP
-    btnBuscarColonias.addEventListener('click', function() {
-        const cp = codigoPostalInput.value;
-        const municipioId = municipioSelect.value;
-        
-        if (cp.length !== 5) {
-            alert('El código postal debe tener 5 dígitos');
-            return;
-        }
-        
-        if (!municipioId) {
-            alert('Seleccione un municipio primero');
-            return;
-        }
-        
-        coloniaSelect.disabled = true;
-        coloniaSelect.innerHTML = '<option value="">Cargando...</option>';
-        
-        fetch(`/api/colonias?cp=${cp}&municipio=${municipioId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length === 0) {
-                    coloniaSelect.innerHTML = '<option value="">No se encontraron colonias</option>';
-                    alert('No se encontraron colonias para este CP en el municipio seleccionado');
-                } else {
-                    coloniaSelect.innerHTML = '<option value="">Seleccionar...</option>';
-                    data.forEach(colonia => {
-                        const option = document.createElement('option');
-                        option.value = colonia.id;
-                        option.textContent = colonia.nombre;
-                        coloniaSelect.appendChild(option);
-                    });
-                    coloniaSelect.disabled = false;
                 }
             });
-    });
-    
-    // Evento cambio de colonia
-    coloniaSelect.addEventListener('change', function() {
-        const coloniaId = this.value;
-        calleSelect.disabled = true;
-        calleSelect.innerHTML = '<option value="">Cargando...</option>';
+        });
+    }
+
+    // Manejo de domicilios
+    const btnNuevoDomicilio = document.getElementById('btnNuevoDomicilio');
+    if (btnNuevoDomicilio) {
+        btnNuevoDomicilio.addEventListener('click', manejarNuevoDomicilio);
+    }
+
+    function manejarNuevoDomicilio() {
+        const form = document.getElementById('formDomicilio');
+        const titulo = document.getElementById('domicilioTitulo');
+        const estado = document.getElementById('estado');
+        const linkModificar = document.getElementById('linkModificarDomicilio');
+        const btnGuardar = document.getElementById('btnGuardarDomicilio');
+        const btnCancelar = document.getElementById('btnCancelarDomicilio');
         
-        if (coloniaId) {
-            fetch(`/api/calles?colonia=${coloniaId}`)
-                .then(response => response.json())
-                .then(data => {
-                    calleSelect.innerHTML = '<option value="">Seleccionar...</option>';
-                    data.forEach(calle => {
-                        const option = document.createElement('option');
-                        option.value = calle.id;
-                        option.textContent = calle.nombre;
-                        calleSelect.appendChild(option);
-                    });
-                    calleSelect.disabled = false;
-                });
-        } else {
-            calleSelect.innerHTML = '<option value="">Seleccione colonia primero</option>';
+        if (!form || !titulo || !estado || !linkModificar || !btnGuardar || !btnCancelar) {
+            console.error('Elementos del formulario de domicilio no encontrados');
+            return;
         }
+        
+        form.reset();
+        form.querySelector('input[name="id"]').value = '';
+        titulo.textContent = '*REGISTRO DE NUEVO DOMICILIO';
+        titulo.className = 'mb-0 d-inline-block text-warning';
+        
+        disableForm(form);
+        estado.disabled = false;
+        
+        linkModificar.classList.add('d-none');
+        btnGuardar.classList.remove('d-none');
+        btnCancelar.classList.remove('d-none');
+    }
+
+    // Funciones auxiliares
+    function enableForm(form) {
+        if (!form) return;
+        Array.from(form.elements).forEach(element => {
+            element.disabled = false;
+        });
+    }
+
+    function disableForm(form) {
+        if (!form) return;
+        Array.from(form.elements).forEach(element => {
+            element.disabled = true;
+        });
+    }
+
+    // Manejo de contactos
+    document.querySelectorAll('.btn-editar-contacto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactoId = this.getAttribute('data-id');
+            const tipoContacto = this.getAttribute('data-tipo');
+            const valorContacto = this.getAttribute('data-valor');
+            const principal = this.getAttribute('data-principal') === '1';
+            
+            // Llenar el formulario de edición
+            document.getElementById('contacto_id').value = contactoId;
+            document.getElementById('edit_tipo_contacto').value = tipoContacto;
+            document.getElementById('edit_valor_contacto').value = valorContacto;
+            document.getElementById('edit_principal').checked = principal;
+        });
     });
-    
+
+    const formNuevoContacto = document.getElementById('formNuevoContacto');
+    const formEditarContacto = document.getElementById('formEditarContacto');
+
+    // Para nuevo contacto
+    if (formNuevoContacto) {
+        formNuevoContacto.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('includes/guardar_contacto.php', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Contacto guardado correctamente',
+                        icon: 'success'
+                    }).then(() => {
+                        limpiarModales();
+                        // Recargar solo la tabla de contactos
+                        cargarContactos();
+                    });
+                } else {
+                    throw new Error(data.error || 'Error al guardar');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+                console.error('Error:', error);
+            });
+        });
+    }
+
+    // Para editar contacto
+    if (formEditarContacto) {
+        formEditarContacto.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('includes/actualizar_contacto.php', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Contacto actualizado correctamente',
+                        icon: 'success'
+                    }).then(() => {
+                        limpiarModales();
+                        // Recargar solo la tabla de contactos
+                        cargarContactos();
+                    });
+                } else {
+                    throw new Error(data.error || 'Error al actualizar');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+                console.error('Error:', error);
+            });
+        });
+    }
+
+    function mostrarAlertaContacto(tipo, mensaje) {
+        const alerta = document.createElement('div');
+        alerta.className = `alert alert-${tipo} alert-dismissible fade show mb-3`;
+        alerta.role = 'alert';
+        alerta.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const contenedor = document.querySelector('#contacto .tab-pane');
+        contenedor.prepend(alerta);
+        
+        setTimeout(() => {
+            alerta.classList.remove('show');
+            setTimeout(() => alerta.remove(), 150);
+        }, 5000);
+    }
+
+    // Eliminar contacto
+    document.querySelectorAll('.btn-eliminar-contacto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactoId = this.getAttribute('data-id');
+            
+            if (confirm('¿Está seguro de eliminar este contacto?')) {
+                fetch(`/haixa/includes/eliminar_contacto.php?id=${contactoId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Contacto eliminado correctamente');
+                            window.location.reload(); // Recargar para ver los cambios
+                        } else {
+                            alert('Error al eliminar: ' + (data.error || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al eliminar el contacto');
+                    });
+            }
+        });
+    });
+
     // Funciones auxiliares
     function enableForm(form) {
         const elements = form.elements;
@@ -147,14 +255,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function fetchEstados() {
-        fetch('/api/estados')
+        fetch('/haixa/includes/cargar_estados.php')
             .then(response => response.json())
             .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+                
                 estadoSelect.innerHTML = '<option value="">Seleccionar...</option>';
                 data.forEach(estado => {
                     const option = document.createElement('option');
-                    option.value = estado.id;
-                    option.textContent = estado.nombre;
+                    option.value = estado.id_estado;
+                    option.textContent = estado.nombre_estado;
                     estadoSelect.appendChild(option);
                 });
             });

@@ -29,17 +29,22 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Estilos locales -->
     <link rel="stylesheet" href="assets/css/main.css">
 
+    <!-- SWEET ALERT-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!--<link rel="stylesheet" href="assets/css/main.css">-->
     <!--<link rel="stylesheet" href="assets/css/overrides.css">-->
     <!-- Favicon -->
     <!--<link rel="icon" href="assets/img/favicon.ico">-->
 
 </head>
-<body>
-    <?php //include 'includes/header.php'; ?>
-    <?php include 'includes/nav.php'; ?>
+<body class="d-flex flex-column min-vh-100">
     
-    <main class="container-fluid">
+    <!-- BARRA DE NAVEGACIÓN-->
+    <?php require_once __DIR__ . '/includes/nav.php'; ?>
+    <br>
+    
+    <main class="container-fluid flex-grow-1">
         <?php 
         $page = isset($_GET['page']) ? 'pages/'.$_GET['page'].'.php' : 'pages/dashboard.php';
         include file_exists($page) ? $page : 'pages/404.php';
@@ -65,6 +70,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
   });
 </script>
     <script src="assets/js/dropdowns.js"></script> <!-- Agrega esta línea -->
+    <script src="assets/js/clientes.js"></script>
 
 </body>
 </html>
