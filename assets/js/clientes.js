@@ -81,6 +81,16 @@ function cargarContactos() {
         .then(response => response.text())
         .then(html => {
             document.querySelector('#contacto .table-responsive').innerHTML = html;
+
+            // Obtener el contacto principal y actualizar el panel
+            const contactoPrincipal = document.querySelector('tr td span.badge.bg-success')?.closest('tr');
+            if (contactoPrincipal) {
+                const valorContacto = contactoPrincipal.querySelector('td:nth-child(2)').textContent;
+                document.getElementById('contacto-principal').textContent = `Contacto principal: ${valorContacto}`;
+            } else {
+                document.getElementById('contacto-principal').textContent = 'Sin contacto principal';
+            }
+            
             // Reasignar eventos a los nuevos botones
             asignarEventosContactos();
             asignarEventosEliminar();
@@ -223,6 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(data => {
                         if (data.success) {
+                            actualizarPanelIzquierdo(data.cliente);
                             Swal.fire('¡Guardado!', 'Datos actualizados correctamente', 'success');
                         } else {
                             throw new Error(data.error || 'Error desconocido');
@@ -235,6 +246,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    }
+
+    // Función para actualizar el panel izquierdo
+    function actualizarPanelIzquierdo(datosCliente) {
+        // Actualizar nombre
+        const nombreCompleto = `${datosCliente.nombres} ${datosCliente.apellido_paterno} ${datosCliente.apellido_materno || ''}`.trim();
+        document.querySelector('.card-body.text-center h3').textContent = nombreCompleto;
+        
+        // Actualizar RFC
+        if (datosCliente.rfc) {
+            document.querySelector('.card-body.text-center .text-muted').textContent = datosCliente.rfc;
+        }
     }
 
     // Manejo de domicilios

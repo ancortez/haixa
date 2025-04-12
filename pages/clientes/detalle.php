@@ -83,6 +83,15 @@ $domicilio_actual = $cliente['domicilios'][0] ?? null;
                 <img src="assets/img/default_user.png" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
                 <h3 class="card-title"><?php echo htmlspecialchars($cliente['nombres'] . ' ' . $cliente['apellido_paterno'] . ' ' . ($cliente['apellido_materno'] ?? '')); ?></h3>
                 <p class="text-muted"><?php echo htmlspecialchars($cliente['rfc'] ?? 'Sin RFC'); ?></p>
+                <p class="text-muted" id="contacto-principal">
+                    <?php 
+                    $contactoPrincipal = array_filter($cliente['contactos'], fn($c) => $c['principal']);
+                    if (!empty($contactoPrincipal)) {
+                        $cp = reset($contactoPrincipal);
+                        echo 'Contacto principal: ' . htmlspecialchars($cp['valor_contacto']);
+                    }
+                    ?>
+                </p>
                 <p><span class="badge bg-secondary"><?php echo htmlspecialchars($cliente['nombre_genero'] ?? 'No especificado'); ?></span></p>
                 
                 <hr>
@@ -160,9 +169,6 @@ $domicilio_actual = $cliente['domicilios'][0] ?? null;
                     <div class="mt-3">
                         <button type="submit" class="btn btn-primary" id="btnGuardarIdentificacion">
                             <i class="fas fa-save"></i> Guardar Datos
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarIdentificacion">
-                            Cancelar
                         </button>
                     </div>
                 </form>

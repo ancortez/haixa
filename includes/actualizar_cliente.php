@@ -62,7 +62,15 @@ try {
         throw new Exception('Error al ejecutar la consulta');
     }
     
-    echo json_encode(['success' => true, 'message' => 'Datos actualizados correctamente']);
+    echo json_encode(['success' => true,
+        'message' => 'Datos actualizados correctamente',
+        'cliente' => [
+            'nombres' => $input['nombres'],
+            'apellido_paterno' => $input['apellido_paterno'],
+            'apellido_materno' => $input['apellido_materno'] ?? '',
+            'rfc' => $input['rfc'] ?? ''
+        ]
+    ]);
     
 } catch (Exception $e) {
     http_response_code(400);
