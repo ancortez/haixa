@@ -1,3 +1,80 @@
+// Obtener el ID del cliente de la URL
+const urlParams = new URLSearchParams(window.location.search);
+const clienteId = urlParams.get('id');
+
+// Función para asignar eventos a los botones de eliminar
+function asignarEventosEliminar() {
+    document.querySelectorAll('.btn-eliminar-contacto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactoId = this.getAttribute('data-id');
+            
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esta acción!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    eliminarContacto(contactoId);
+                }
+            });
+        });
+    });
+}
+
+// Función para eliminar un contacto via AJAX
+function eliminarContacto(contactoId) {
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Eliminando contacto',
+        html: 'Por favor espera...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`includes/eliminar_contacto.php?id=${contactoId}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.error || 'Error en la respuesta del servidor'); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire(
+                '¡Eliminado!',
+                'El contacto ha sido eliminado correctamente.',
+                'success'
+            ).then(() => {
+                // Recargar la tabla de contactos
+                cargarContactos();
+            });
+        } else {
+            throw new Error(data.error || 'Error al eliminar el contacto');
+        }
+    })
+    .catch(error => {
+        Swal.fire(
+            'Error',
+            error.message || 'Ocurrió un error al eliminar el contacto',
+            'error'
+        );
+        console.error('Error al eliminar contacto:', error);
+    });
+}
+
 // Función para recargar contactos sin refrescar toda la página
 function cargarContactos() {
     fetch(`includes/cargar_contactos.php?id_cliente=${clienteId}`)
@@ -6,12 +83,105 @@ function cargarContactos() {
             document.querySelector('#contacto .table-responsive').innerHTML = html;
             // Reasignar eventos a los nuevos botones
             asignarEventosContactos();
+            asignarEventosEliminar();
         })
         .catch(error => {
             console.error('Error al cargar contactos:', error);
             // Si falla, recargar toda la página
             window.location.reload();
         });
+}
+
+// Función mejorada para cerrar modales y limpiar completamente
+function cerrarModalCompletamente(modalId) {
+    const modalElement = document.getElementById(modalId);
+    if (!modalElement) return;
+
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.hide();
+    }
+
+    // Eliminar el backdrop después de la animación (300ms es el tiempo por defecto de Bootstrap)
+    setTimeout(() => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        
+        // Restaurar el estado del body
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
+    }, 300);
+}
+
+// Función para limpiar formularios de modales
+function limpiarFormularioModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// Función para asignar eventos a los botones de contacto
+function asignarEventosContactos() {
+    // Asignar eventos a los botones de editar
+    document.querySelectorAll('.btn-editar-contacto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactoId = this.getAttribute('data-id');
+            const tipoContacto = this.getAttribute('data-tipo');
+            const valorContacto = this.getAttribute('data-valor');
+            const principal = this.getAttribute('data-principal') === '1';
+            
+            // Llenar el formulario de edición
+            document.getElementById('contacto_id').value = contactoId;
+            document.getElementById('edit_tipo_contacto').value = tipoContacto;
+            document.getElementById('edit_valor_contacto').value = valorContacto;
+            document.getElementById('edit_principal').checked = principal;
+        });
+    });
+    
+    // Asignar eventos a los botones de eliminar
+    document.querySelectorAll('.btn-eliminar-contacto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contactoId = this.getAttribute('data-id');
+            
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: "¡No podrás revertir esto!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`includes/eliminar_contacto.php?id=${contactoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    '¡Eliminado!',
+                                    'El contacto ha sido eliminado.',
+                                    'success'
+                                ).then(() => {
+                                    cargarContactos();
+                                });
+                            } else {
+                                throw new Error(data.error || 'Error al eliminar');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error', error.message, 'error');
+                            console.error('Error:', error);
+                        });
+                }
+            });
+        });
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -150,8 +320,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         text: 'Contacto guardado correctamente',
                         icon: 'success'
                     }).then(() => {
-                        limpiarModales();
-                        // Recargar solo la tabla de contactos
+                        // Cerrar y limpiar el modal de nuevo contacto
+                        cerrarModalCompletamente('nuevoContactoModal');
+                        this.reset();
+                        // Recargar la tabla de contactos
                         cargarContactos();
                     });
                 } else {
@@ -164,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
 
     // Para editar contacto
     if (formEditarContacto) {
@@ -182,8 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         text: 'Contacto actualizado correctamente',
                         icon: 'success'
                     }).then(() => {
-                        limpiarModales();
-                        // Recargar solo la tabla de contactos
+                        // Cerrar y limpiar el modal de editar contacto
+                        cerrarModalCompletamente('editarContactoModal');
+                        // Recargar la tabla de contactos
                         cargarContactos();
                     });
                 } else {
@@ -196,6 +370,26 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Eventos para manejar el cierre manual (botón X o Cancelar)
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) {
+                cerrarModalCompletamente(modal.id);
+            }
+        });
+    });
+
+    // Manejar el evento hidden.bs.modal para limpieza adicional
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Limpieza adicional si es necesario
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '0';
+        });
+    });
 
     function mostrarAlertaContacto(tipo, mensaje) {
         const alerta = document.createElement('div');
@@ -272,4 +466,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
     }
+});
+
+// Manejar eventos de cierre del modal
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function () {
+        // Eliminar el backdrop si existe
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        
+        // Restaurar el scroll del body
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
+        document.body.classList.remove('modal-open');
+    });
 });

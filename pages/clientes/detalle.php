@@ -198,7 +198,7 @@ $domicilio_actual = $cliente['domicilios'][0] ?? null;
                     No se han registrado medios de contacto para este cliente.
                 </div>
                 <?php else: ?>
-                <div class="table-responsive">
+                <div class="table-responsive" id="tabla-contactos-container">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -217,7 +217,7 @@ $domicilio_actual = $cliente['domicilios'][0] ?? null;
                                     <?php if ($contacto['principal']): ?>
                                     <span class="badge bg-success"><i class="fas fa-check"></i></span>
                                     <?php else: ?>
-                                    <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
+                                    <span class="badge bg-secondary"></i></span>
                                     <?php endif; ?>
                                 </td>
                                 <td>

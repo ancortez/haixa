@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="login-body">
     <div class="login-container">
+        
         <div class="login-logo">
             <img src="assets/img/logo.png" alt="HAIXA Logo">
         </div>
